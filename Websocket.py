@@ -1,5 +1,3 @@
-print("Hello, ESP32-S3!")
-
 import network
 import time
 import socket
