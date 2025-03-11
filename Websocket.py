@@ -29,7 +29,7 @@ oled = ssd1306.SSD1306_I2C(128, 64, i2c)
 
 def update_oled(message):
     oled.fill(0)
-    oled.text(message, 0, 0)  # Display message at the top
+    oled.text(message, 0, 0)
     oled.show()
 
 # WiFi Station Credentials
@@ -39,21 +39,21 @@ password_st = "HackerMan1100"
 print("Connecting to WiFi", end="")
 sta = network.WLAN(network.STA_IF)
 sta.active(True)
-sta.connect(ssid_st, password_st)
+sta.connect("HackerMan", "HackerMan1100")
 
-# Wait for connection
 for _ in range(10):
     if sta.isconnected():
         break
     time.sleep(1)
 
 if sta.isconnected():
-    print("Connected to WiFi!")
-    print("IP Address as station:", sta.ifconfig()[0])
+    print("\nConnected to WiFi!")
+    print("IP Address:", sta.ifconfig()[0])
 else:
-    print("Failed to connect")
+    print("\nFailed to connect")
+    raise Exception("WiFi connection failed")
 
-# Create Access Point
+# Access Point Setup
 ssid_ap = "ESP32_AP"
 password_ap = "12345678"
 ap = network.WLAN(network.AP_IF)
@@ -71,27 +71,24 @@ def web_page():
     <head><title>ESP32 Web Server</title></head>
     <body>
     <h1>ESP32 RGB LED Control</h1>
-    <p><a href="/?RGB=red"><button>Turn RGB RED</button></a></p>
-    <p><a href="/?RGB=green"><button>Turn RGB GREEN</button></a></p>
-    <p><a href="/?RGB=blue"><button>Turn RGB BLUE</button></a></p>
-    <br>
-    <h1>Temperature and Humidity</h1>
-    <h2>Temp: {temp} &#8451;</h2>
-    <h2>Humidity: {humidity}%</h2>
-    <br>
-    <h2>OLED Text Display</h2>
+    <p><a href="/?RGB=red"><button>RED</button></a></p>
+    <p><a href="/?RGB=green"><button>GREEN</button></a></p>
+    <p><a href="/?RGB=blue"><button>BLUE</button></a></p>
+    <h1>Temperature: {temp}°C</h1>
+    <h1>Humidity: {humidity}%</h1>
     <form action="/" method="GET">
-        <input type="text" name="message" placeholder="Enter text">
-        <input type="submit" value="Display on OLED">
+        <input type="text" name="message" maxlength="20" placeholder="Text for OLED">
+        <input type="submit" value="Display">
     </form>
     </body>
     </html>"""
     return html
 
-# Start Web Server
+# Create and bind socket only after WiFi is connected
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind(("0.0.0.0", 80))
 s.listen(5)
+print("Socket bound to port 80")
 
 while True:
     conn, addr = s.accept()
@@ -99,6 +96,7 @@ while True:
     request = conn.recv(1024).decode()
     print("Request:", request)
     
+    # Check for RGB control
     if "/?RGB=red" in request:
         neo[0] = (255, 0, 0)  # Set NeoPixel to red
         neo.write()
@@ -109,18 +107,22 @@ while True:
         neo[0] = (0, 0, 255)  # Set NeoPixel to blue
         neo.write()
     
-    # Extract message from URL
-    if "?message=" in request:
-        msg_start = request.find("?message=") + 9
-        msg_end = request.find(" ", msg_start)
-        message = request[msg_start:msg_end] if msg_end != -1 else request[msg_start:]
+    # Check for OLED message
+    if "GET /?message=" in request:
+        # Extract the message from the request
+        msg_start = request.find("?message=") + 9  # Start of the message
+        msg_end = request.find(" HTTP/", msg_start)  # End of the message (before " HTTP/")
+        if msg_end == -1:
+            msg_end = len(request)  # If " HTTP/" is not found, use the end of the string
+        message = request[msg_start:msg_end]
         message = message.replace("+", " ")  # Replace '+' with spaces
         message = message[:20]  # Limit to 20 characters
         print("Message to OLED:", message)
         oled.fill(0)
-        oled.text(message, 0, 0)  # Display at the top instead of center
+        oled.text(message, 0, 0)  # Display at the top
         oled.show()
     
+    # Send response
     response = web_page()
     conn.send("HTTP/1.1 200 OK\nContent-Type: text/html\n\n".encode())
     conn.send(response.encode())
