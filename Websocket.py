@@ -30,9 +30,18 @@ i2c = I2C(0, scl=Pin(9), sda=Pin(8))
 oled = ssd1306.SSD1306_I2C(128, 64, i2c)
 
 def update_oled(message):
-    oled.fill(0)
-    oled.text(message, 0, 0)
-    oled.show()
+    oled.fill(0)  # Clear the display
+    
+    # Split the message by newline characters
+    lines = message.split('\\n')
+    
+    # Display each line with proper vertical spacing
+    # Each character is about 8 pixels high
+    for i, line in enumerate(lines):
+        y_position = i * 10  # 10 pixels between lines for readability
+        oled.text(line, 0, y_position)
+    
+    oled.show()  # Update the display
 
 # WiFi Station Credentials
 ssid_st = "HackerMan"
@@ -75,122 +84,209 @@ def web_page():
     <title>ESP32 Web Server</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        /* General Styles */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f4f4;
-            color: #333;
+        * {
             margin: 0;
             padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            flex-direction: column;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
         }
-
-        h1 {
-            color: #2196F3;
-            margin-bottom: 20px;
-        }
-
-        h2 {
-            color: #4CAF50;
-            margin-top: 20px;
-            margin-bottom: 10px;
-        }
-
-        .container {
-            background: #fff;
+        
+        body {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            color: white;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 90%;
-            max-width: 500px;
+            min-height: 100vh;
+        }
+        
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        h2 {
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
             text-align: center;
         }
-
+        
+        .flex-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+        
+        .control-box {
+            flex: 1;
+            min-width: 300px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .control-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            animation: shine 3s infinite;
+            z-index: 0;
+        }
+        
+        @keyframes shine {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .control-content {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .button-group {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+            width: 100%;
+        }
+        
         .button {
-            background-color: #2196F3;
-            color: white;
-            padding: 10px 20px;
-            margin: 8px;
+            display: inline-block;
+            padding: 10px 15px;
+            margin: 5px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s ease;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            color: white;
+            background-color: #333;
+            text-align: center;
         }
-
+        
         .button:hover {
-            background-color: #1976D2;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3);
         }
-
-        .button.red {
-            background-color: #f44336;
-        }
-
-        .button.red:hover {
-            background-color: #d32f2f;
-        }
-
-        .button.green {
-            background-color: #4CAF50;
-        }
-
-        .button.green:hover {
-            background-color: #388E3C;
-        }
-
-        .button.blue {
-            background-color: #2196F3;
-        }
-
-        .button.blue:hover {
-            background-color: #1976D2;
-        }
-
-        form {
-            margin: 20px 0;
-        }
-
-        input[type="text"], input[type="number"] {
-            width: 80px;
+        
+        .red { background-color: #e74c3c; }
+        .green { background-color: #2ecc71; }
+        .blue { background-color: #3498db; }
+        
+        input[type="number"], input[type="text"] {
             padding: 8px;
-            margin: 8px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-
-        input[type="submit"] {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
+            margin: 5px;
             border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s ease;
+            border-radius: 4px;
+            background-color: rgba(255, 255, 255, 0.9);
         }
-
-        input[type="submit"]:hover {
-            background-color: #388E3C;
+        
+        input[type="submit"] {
+            background-color: #9b59b6;
+            margin-top: 10px;
         }
-
+        
         #sensorData {
-            margin-top: 20px;
-            font-size: 18px;
+            text-align: center;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            margin: 0 auto;
+            max-width: 500px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
-
+        
         #sensorData h3 {
             margin: 10px 0;
-            color: #555;
         }
-
-        #temp, #humidity {
-            font-weight: bold;
-            color: #2196F3;
+        
+        form {
+            margin-top: 15px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .rgb-controls {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+        
+        .rgb-input {
+            display: flex;
+            align-items: center;
+            margin: 0 5px;
+        }
+        
+        label {
+            margin-right: 5px;
+            display: inline-block;
+            min-width: 25px;
+        }
+        
+        .oled-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .flex-container {
+                flex-direction: column;
+            }
+            
+            .control-box {
+                min-width: 100%;
+            }
+            
+            .rgb-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .rgb-input {
+                margin: 5px 0;
+            }
         }
     </style>
 </head>
@@ -198,38 +294,60 @@ def web_page():
     <div class="container">
         <h1>ESP32 Control Panel</h1>
         
-        <!-- RGB LED Control -->
-        <h2>RGB LED Control</h2>
-        <a href="/red"><button class="button red">RED</button></a>
-        <a href="/green"><button class="button green">GREEN</button></a>
-        <a href="/blue"><button class="button blue">BLUE</button></a>
-        
-        <!-- Custom RGB Color -->
-        <h2>Custom RGB Color</h2>
-        <form action="/custom-rgb" method="POST">
-            <label for="r">R:</label>
-            <input type="number" id="r" name="r" min="0" max="255" value="0">
+        <div class="flex-container">
+            <!-- RGB LED Control -->
+            <div class="control-box">
+                <div class="control-content">
+                    <h2>RGB LED Control</h2>
+                    <div class="button-group">
+                        <a href="/red"><button class="button red">RED</button></a>
+                        <a href="/green"><button class="button green">GREEN</button></a>
+                        <a href="/blue"><button class="button blue">BLUE</button></a>
+                    </div>
+                </div>
+            </div>
             
-            <label for="g">G:</label>
-            <input type="number" id="g" name="g" min="0" max="255" value="0">
+            <!-- Custom RGB Color -->
+            <div class="control-box">
+                <div class="control-content">
+                    <h2>Custom RGB Color</h2>
+                    <form action="/custom-rgb" method="POST">
+                        <div class="rgb-controls">
+                            <div class="rgb-input">
+                                <label for="r">R:</label>
+                                <input type="number" id="r" name="r" min="0" max="255" value="0">
+                            </div>
+                            
+                            <div class="rgb-input">
+                                <label for="g">G:</label>
+                                <input type="number" id="g" name="g" min="0" max="255" value="0">
+                            </div>
+                            
+                            <div class="rgb-input">
+                                <label for="b">B:</label>
+                                <input type="number" id="b" name="b" min="0" max="255" value="0">
+                            </div>
+                        </div>
+                        <input type="submit" value="Set LED Color" class="button">
+                    </form>
+                </div>
+            </div>
             
-            <label for="b">B:</label>
-            <input type="number" id="b" name="b" min="0" max="255" value="0">
-            
-            <br>
-            <input type="submit" value="Set LED Color" class="button">
-        </form>
-        
-        <!-- OLED Display -->
-        <h2>OLED Display</h2>
-        <form action="/text" method="POST">
-            <input type="text" name="message" maxlength="20" placeholder="Text for OLED">
-            <input type="submit" value="Display" class="button">
-        </form>
+            <!-- OLED Display -->
+            <div class="control-box">
+                <div class="control-content">
+                    <h2>OLED Display</h2>
+                    <form action="/text" method="POST" class="oled-container">
+                        <input type="text" name="message" maxlength="20" placeholder="Text for OLED">
+                        <input type="submit" value="Display" class="button">
+                    </form>
+                </div>
+            </div>
+        </div>
         
         <!-- Sensor Data -->
-        <h2>Sensor Data</h2>
         <div id="sensorData">
+            <h2>Sensor Data</h2>
             <h3>Temperature: <span id="temp">Reading...</span>&#8451;</h3>
             <h3>Humidity: <span id="humidity">Reading...</span>%</h3>
         </div>
@@ -366,8 +484,9 @@ while True:
                 # Extract the message
                 if "message=" in form_data:
                     message = form_data.split("message=")[1].split("&")[0]
-                    # Simple URL decoding (replace + with space)
+                    # Simple URL decoding (replace + with space and %0A with \n)
                     message = message.replace("+", " ")
+                    message = message.replace("%0A", "\\n")  # Handle URL-encoded newlines
                     
                     print("Message to OLED:", message)
                     update_oled(message)
