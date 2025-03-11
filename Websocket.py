@@ -68,95 +68,105 @@ print("AP IP Address:", ap.ifconfig()[0])
 
 # Web Server Function
 def web_page():
-    html = """<!DOCTYPE html>
-    <html>
-    <head>
-        <title>ESP32 Web Server</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <style>
-            body { font-family: Arial; text-align: center; margin: 20px; }
-            .button { 
-                background-color: #4CAF50; 
-                color: white; 
-                padding: 10px 20px; 
-                margin: 8px 0; 
-                border: none; 
-                border-radius: 4px; 
-                cursor: pointer; 
-                width: 150px;
-            }
-            .red { background-color: #f44336; }
-            .green { background-color: #4CAF50; }
-            .blue { background-color: #2196F3; }
-            form { margin: 20px 0; }
-            input[type=text], input[type=number] { 
-                width: 80px; 
-                padding: 8px; 
-                margin: 8px 0; 
-                box-sizing: border-box; 
-            }
-        </style>
-    </head>
-    <body>
-        <h1>ESP32 Control Panel</h1>
+    html = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ESP32 Web Server</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { 
+            font-family: Arial; 
+            text-align: center; 
+            margin: 20px; 
+        }
+        .button { 
+            background-color: #4CAF50; 
+            color: white; 
+            padding: 10px 20px; 
+            margin: 8px 0; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            width: 150px;
+        }
+        .red { background-color: #f44336; }
+        .green { background-color: #4CAF50; }
+        .blue { background-color: #2196F3; }
+        form { margin: 20px 0; }
+        input[type=text], input[type=number] { 
+            width: 80px; 
+            padding: 8px; 
+            margin: 8px 0; 
+            box-sizing: border-box; 
+        }
+    </style>
+</head>
+<body>
+    <h1>ESP32 Control Panel</h1>
+    
+    <!-- RGB LED Control -->
+    <h2>RGB LED Control</h2>
+    <a href="/red"><button class="button red">RED</button></a>
+    <a href="/green"><button class="button green">GREEN</button></a>
+    <a href="/blue"><button class="button blue">BLUE</button></a>
+    
+    <!-- Custom RGB Color -->
+    <h2>Custom RGB Color</h2>
+    <form action="/custom-rgb" method="POST">
+        <label for="r">R:</label>
+        <input type="number" id="r" name="r" min="0" max="255" value="0">
         
-        <h2>RGB LED Control</h2>
-        <a href="/red"><button class="button red">RED</button></a>
-        <a href="/green"><button class="button green">GREEN</button></a>
-        <a href="/blue"><button class="button blue">BLUE</button></a>
+        <label for="g">G:</label>
+        <input type="number" id="g" name="g" min="0" max="255" value="0">
         
-        <h2>Custom RGB Color</h2>
-        <form action="/custom-rgb" method="POST">
-            <label for="r">R:</label>
-            <input type="number" id="r" name="r" min="0" max="255" value="0">
-            
-            <label for="g">G:</label>
-            <input type="number" id="g" name="g" min="0" max="255" value="0">
-            
-            <label for="b">B:</label>
-            <input type="number" id="b" name="b" min="0" max="255" value="0">
-            
-            <br>
-            <input type="submit" value="Set LED Color" class="button">
-        </form>
+        <label for="b">B:</label>
+        <input type="number" id="b" name="b" min="0" max="255" value="0">
         
-        <h2>OLED Display</h2>
-        <form action="/text" method="POST">
-            <input type="text" name="message" maxlength="20" placeholder="Text for OLED">
-            <input type="submit" value="Display" class="button">
-        </form>
-        
-        <h2>Sensor Data</h2>
-        <div id="sensorData">
-            <h3>Temperature: <span id="temp">Reading...</span>&#8451;</h3>
-            <h3>Humidity: <span id="humidity">Reading...</span>%</h3>
-        </div>
-        
-        <script>
-            // Function to update sensor data
-            function updateSensorData() {
-                var xhr = new XMLHttpRequest();
-                xhr.open('GET', '/sensor-data', true);
-                xhr.onreadystatechange = function() {
-                    if (xhr.readyState == 4 && xhr.status == 200) {
-                        var data = JSON.parse(xhr.responseText);
-                        document.getElementById('temp').textContent = data.temp;
-                        document.getElementById('humidity').textContent = data.humidity;
-                    }
-                };
-                xhr.send();
-                
-                // Schedule the next update
-                setTimeout(updateSensorData, 2000); // Update every 2 seconds
-            }
-            
-            // Start updating when page loads
-            window.onload = function() {
-                updateSensorData();
+        <br>
+        <input type="submit" value="Set LED Color" class="button">
+    </form>
+    
+    <!-- OLED Display -->
+    <h2>OLED Display</h2>
+    <form action="/text" method="POST">
+        <input type="text" name="message" maxlength="20" placeholder="Text for OLED">
+        <input type="submit" value="Display" class="button">
+    </form>
+    
+    <!-- Sensor Data -->
+    <h2>Sensor Data</h2>
+    <div id="sensorData">
+        <h3>Temperature: <span id="temp">Reading...</span>&#8451;</h3>
+        <h3>Humidity: <span id="humidity">Reading...</span>%</h3>
+    </div>
+    
+    <!-- JavaScript for Live Updates -->
+    <script>
+        // Function to update sensor data
+        function updateSensorData() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '/sensor-data', true);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    var data = JSON.parse(xhr.responseText);
+                    document.getElementById('temp').textContent = data.temp;
+                    document.getElementById('humidity').textContent = data.humidity;
+                }
             };
-        </script>
-    </body>
-    </html>"""
+            xhr.send();
+            
+            // Schedule the next update
+            setTimeout(updateSensorData, 2000); // Update every 2 seconds
+        }
+        
+        // Start updating when page loads
+        window.onload = function() {
+            updateSensorData();
+        };
+    </script>
+</body>
+</html>"""
     return html
 
 # Create and bind socket only after WiFi is connected
