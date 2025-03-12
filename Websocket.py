@@ -44,13 +44,13 @@ def update_oled(message):
     oled.show()  # Update the display
 
 # WiFi Station Credentials
-ssid_st = "HackerMan"
-password_st = "HackerMan1100"
+ssid_st = "NTU FSD"
+password_st = ""
 
 print("Connecting to WiFi", end="")
 sta = network.WLAN(network.STA_IF)
 sta.active(True)
-sta.connect("HackerMan", "HackerMan1100")
+sta.connect("NTU FSD", "")
 
 for _ in range(10):
     if sta.isconnected():
@@ -66,7 +66,7 @@ else:
     raise Exception("WiFi connection failed")
 
 # Access Point Setup
-ssid_ap = "ESP32_AP"
+ssid_ap = "ESP32_K"
 password_ap = "12345678"
 ap = network.WLAN(network.AP_IF)
 ap.active(True)
