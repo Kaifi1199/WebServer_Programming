@@ -44,13 +44,13 @@ def update_oled(message):
     oled.show()  # Update the display
 
 # WiFi Station Credentials
-ssid_st = "NTU FSD"
-password_st = ""
+ssid_st = "HackerMan"
+password_st = "HackerMan1100"
 
 print("Connecting to WiFi", end="")
 sta = network.WLAN(network.STA_IF)
 sta.active(True)
-sta.connect("NTU FSD", "")
+sta.connect("HackerMan", "HackerMan1100")
 
 for _ in range(10):
     if sta.isconnected():
