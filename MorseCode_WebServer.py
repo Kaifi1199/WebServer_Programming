@@ -35,6 +35,50 @@ np = neopixel.NeoPixel(machine.Pin(48), 1)
 np[0] = (0, 0, 0)
 np.write()
 
+MORSE_CODE = {
+    'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.',
+    'G': '--.', 'H': '....', 'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..',
+    'M': '--', 'N': '-.', 'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.',
+    'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
+    'Y': '-.--', 'Z': '--..', '0': '-----', '1': '.----', '2': '..---',
+    '3': '...--', '4': '....-', '5': '.....', '6': '-....', '7': '--...',
+    '8': '---..', '9': '----.', ' ': ' '
+}
+
+def blink_neopixel(morse):
+    for symbol in morse.strip():
+        if symbol == '.':
+            np[0] = (255, 0, 0)  # Red for dot
+            np.write()
+            time.sleep(0.5)      # Dot: 0.5 sec
+            np[0] = (0, 0, 0)   # Off
+            np.write()
+            time.sleep(0.2)      # Gap
+        elif symbol == '-':
+            np[0] = (0, 0, 255)  # Blue for dash
+            np.write()
+            time.sleep(2)        # Dash: 2 sec
+            np[0] = (0, 0, 0)   # Off
+            np.write()
+            time.sleep(0.2)      # Gap
+        elif symbol == ' ':
+            time.sleep(0.5)      # Space between words
+    print("Neopixel sequence complete")
+
+def text_to_morse(text):
+    oled.fill(0)  # Clear OLED
+    oled.text("MorseGlow", 0, 0)
+    morse = ""
+    for char in text.upper():
+        if char in MORSE_CODE:
+            morse += MORSE_CODE[char] + " "
+    # Display text and morse code on OLED
+    oled.text(text[:16], 0, 20)
+    oled.text(morse[:16], 0, 40)
+    oled.show()
+    print("OLED Updated - Text:", text, "Morse:", morse)
+    blink_neopixel(morse)
+    return morse.strip()
 
 
 # Initialize socket
