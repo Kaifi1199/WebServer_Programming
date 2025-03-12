@@ -80,6 +80,134 @@ def text_to_morse(text):
     blink_neopixel(morse)
     return morse.strip()
 
+def webpage(last_morse=""):
+    html = """<!DOCTYPE html>
+<html>
+<head>
+    <title>MorseGlow Transmitter</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #fff;
+            overflow: hidden;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            width: 400px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
+            border-radius: 25px;
+            z-index: -1;
+            filter: blur(20px);
+            animation: glow 3s infinite alternate;
+        }
+        @keyframes glow {
+            0% {
+                box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+            }
+            100% {
+                box-shadow: 0 0 40px rgba(255, 255, 255, 0.4);
+            }
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .input-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            outline: none;
+            transition: background 0.3s ease;
+        }
+        input[type="text"]:focus {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        input[type="text"]::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        button {
+            padding: 12px 24px;
+            background: #3498db;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+        button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .morse-output {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            color: #000000;
+            font-family: monospace;
+            word-wrap: break-word;
+            margin-top: 20px;
+            animation: fadeIn 1s ease;
+            font-weight: bold;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body onload="document.getElementById('msgInput').value = '';">
+    <div class="container">
+        <h1>MorseGlow</h1>
+        <form action="/" method="POST">
+            <div class="input-box">
+                <input type="text" id="msgInput" name="msg" placeholder="Enter your message" maxlength="20">
+                <button type="submit">Transmit</button>
+            </div>
+        </form>
+        <div class="morse-output">Last Morse Code: """ + last_morse + """</div>
+    </div>
+</body>
+</html>"""
+    return html
+
 
 # Initialize socket
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
